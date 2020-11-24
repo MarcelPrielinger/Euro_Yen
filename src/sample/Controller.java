@@ -1,21 +1,64 @@
 package sample;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
+import javafx.fxml.Initializable;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 
-import java.util.Currency;
+import java.net.URL;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.ResourceBundle;
 
-public class Controller {
+public class Controller implements Initializable {
 
-    @FXML private Button btn_convert;
-    @FXML private TextField txt_euro;
-    @FXML private TextField txt_yen;
+    @FXML
+    private TextField txtEuro;
+    @FXML
+    private TextField txtYen;
+    @FXML
+    private ChoiceBox currencies;
 
-    CurrencyConverte cC = new CurrencyConverte();
+    private CurrencyConverte currencyConverter;
 
-    @FXML public void doConvertion()
-    {
-        txt_yen.setText(String.valueOf(cC.euroToYen(Double.valueOf(txt_euro.getText()))));
+    private static final  NumberFormat DEC2FORMAT;
+
+    static {
+        DEC2FORMAT = NumberFormat.getNumberInstance();
+        DEC2FORMAT.setGroupingUsed(true);
+        DEC2FORMAT.setMinimumFractionDigits(2);
+        DEC2FORMAT.setMaximumFractionDigits(2);
+    }
+
+    /**
+     * Passiert, wenn der Umrechnungs-Button gedrückt wird
+     */
+    @FXML
+    public void btnConvertAction() {
+        //  besser in Methode auslagern, weil gleiche Funktionalitäten via GUIs häufig auf verschiedene Weisen aufgerufen werden können.
+        convert();
+    }
+
+    /**
+     * Konvertierung Euro -> Currency
+     */
+    private void convert() {
+        try {
+            double euro = DEC2FORMAT.parse(txtEuro.getText()).doubleValue();
+            double currency = currencyConverter.euroToCurrency((String)currencies.getValue(), euro);
+            txtYen.setText(DEC2FORMAT.format(currency));
+        }
+        catch (ParseException e) {
+            System.out.println("Fehler bei der Umwandlung!");
+        }
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        currencyConverter = new CurrencyConverte();
+        for (Currency c : currencyConverter.getCurrencyList()) {
+            currencies.getItems().add(c.getSign());
+        }
+        currencies.setValue("Zielwährung");
     }
 }
